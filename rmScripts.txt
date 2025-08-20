@@ -1,0 +1,46 @@
+#!/bin/bash
+
+TRASH_DIR="/tmp/trash"
+LOG_FILE="$TRASH_DIR/trash.log"
+TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+
+usage() {
+  echo "Usage: rm [-r] file1 [file2 ...]"
+  exit 1
+}
+
+# Parse flags
+RECURSIVE=false
+FILES=()
+
+for arg in "$@"; do
+  case "$arg" in
+    -r) RECURSIVE=true ;;
+    -*) echo "Unsupported flag: $arg"; usage ;;
+    *) FILES+=("$arg") ;;
+  esac
+done
+
+if [ ${#FILES[@]} -eq 0 ]; then
+  usage
+fi
+
+for TARGET in "${FILES[@]}"; do
+  if [ ! -e "$TARGET" ]; then
+    echo "Error: '$TARGET' does not exist"
+    continue
+  fi
+
+  BASENAME=$(basename "$TARGET")
+  TRASH_NAME="${BASENAME}_$TIMESTAMP"
+  TRASH_PATH="$TRASH_DIR/$TRASH_NAME"
+
+  if [ -d "$TARGET" ] && [ "$RECURSIVE" = false ]; then
+    echo "Error: '$TARGET' is a directory. Use -r to delete recursively."
+    continue
+  fi
+
+  mv "$TARGET" "$TRASH_PATH"
+  echo "$(realpath "$TARGET")|$TRASH_PATH|$TIMESTAMP" >> "$LOG_FILE"
+  echo "Moved '$TARGET' to trash as '$TRASH_NAME'"
+done
