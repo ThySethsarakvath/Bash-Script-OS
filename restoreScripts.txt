@@ -1,0 +1,37 @@
+#!/bin/bash
+
+TRASH_DIR="/tmp/trash"
+LOG_FILE="$TRASH_DIR/trash.log"
+
+if [ $# -eq 0 ]; then
+  echo "Usage: restore filename"
+  exit 1
+fi
+
+QUERY="$1"
+MATCH=$(grep "$QUERY" "$LOG_FILE" | tail -n 1)
+
+if [ -z "$MATCH" ]; then
+  echo "No match found for '$QUERY'"
+  exit 1
+fi
+
+ORIGINAL_PATH=$(echo "$MATCH" | cut -d '|' -f 1)
+TRASH_PATH=$(echo "$MATCH" | cut -d '|' -f 2)
+
+if [ ! -e "$TRASH_PATH" ]; then
+  echo "Error: Trash file not found"
+  exit 1
+fi
+
+DEST_DIR=$(dirname "$ORIGINAL_PATH")
+mkdir -p "$DEST_DIR"
+
+if [ -e "$ORIGINAL_PATH" ]; then
+  echo "Conflict: '$ORIGINAL_PATH' already exists. Renaming restored file."
+  mv "$TRASH_PATH" "${ORIGINAL_PATH}_restored"
+else
+  mv "$TRASH_PATH" "$ORIGINAL_PATH"
+fi
+
+echo "Restored to '$ORIGINAL_PATH'"
