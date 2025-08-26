@@ -1,0 +1,14 @@
+#!/bin/bash
+
+for file in *.*; do
+
+  [ -f "$file" ] || continue
+
+  ext="${file##*.}"
+  ext_lower=$(echo "$ext" | tr '[:upper:]' '[:lower:]')
+
+  mkdir -p "$ext_lower"
+
+  mv "$file" "$ext_lower/"
+  echo "Moved '$file' to '$ext_lower/'"
+done
